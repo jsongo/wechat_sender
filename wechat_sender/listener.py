@@ -28,13 +28,14 @@ class Application(tornado.web.Application):
     tornado app 初始化
     """
 
-    def __init__(self):
+    def __init__(self, otherRoutes=[]):
         handlers = [
             (r"/message", MessageHandle),
             (r"/delay_message", DelayMessageHandle),
             (r"/periodic_message", PeriodicMessageHandle),
             (r"/send_to_message", UserMessageHandle),
         ]
+        handlers.extend(otherRoutes)
         settings = dict(
             static_path=os.path.join(os.path.dirname(__file__), "static"),
         )
@@ -292,8 +293,10 @@ def register_listener_handle(wxbot):
                 pre_conf.func(msg)
 
 
-def listen(bot, receivers=None, token=None, port=10245, status_report=False, status_receiver=None,
-           status_interval=DEFAULT_REPORT_TIME):
+def listen(bot, receivers=None, token=None,
+        port=10245, status_report=False,
+        status_receiver=None, handlers=[],
+        status_interval=DEFAULT_REPORT_TIME):
     """
     传入 bot 实例并启动 wechat_sender 服务
 
@@ -308,7 +311,7 @@ def listen(bot, receivers=None, token=None, port=10245, status_report=False, sta
     """
     global glb
     periodic_list = []
-    app = Application()
+    app = Application(handlers)
     wxbot = WxBot(bot, receivers, status_receiver)
     register_listener_handle(wxbot)
     process = psutil.Process()
